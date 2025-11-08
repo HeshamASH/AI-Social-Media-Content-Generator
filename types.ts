@@ -1,35 +1,38 @@
-export enum Tone {
-  Professional = 'Professional',
-  Witty = 'Witty',
-  Urgent = 'Urgent',
-  Casual = 'Casual',
-  Inspirational = 'Inspirational',
+export enum RoomType {
+  LivingRoom = 'Living Room',
+  Bedroom = 'Bedroom',
+  Kitchen = 'Kitchen',
+  Office = 'Home Office',
+  Bathroom = 'Bathroom',
 }
 
-export enum Audience {
-  General = 'General Public',
-  TechEnthusiasts = 'Tech Enthusiasts',
-  BusinessProfessionals = 'Business Professionals',
-  SmallBusinessOwners = 'Small Business Owners',
-  Students = 'Students',
-  Creatives = 'Artists and Creatives',
+export enum DecorStyle {
+  Modern = 'Modern',
+  Scandinavian = 'Scandinavian',
+  Bohemian = 'Bohemian',
+  Industrial = 'Industrial',
+  Minimalist = 'Minimalist',
 }
 
-export enum SocialPlatform {
-  LinkedIn = 'LinkedIn',
-  Twitter = 'Twitter/X',
-  Instagram = 'Instagram',
-}
-
-export interface GeneratedPost {
-  platform: SocialPlatform;
-  content: string;
+export interface GeneratedDesign {
+  rationale: string;
   image: string | null;
-  aspectRatio: '1:1' | '16:9' | '3:4';
 }
 
-export interface SocialPostText {
-  linkedin: string;
-  twitter: string;
-  instagram: string;
+export interface InspirationTemplate {
+  name: string;
+  description: string;
+  roomType: RoomType;
+  decorStyle: DecorStyle;
 }
+
+export interface Comment {
+  id: number;
+  x: number; // percentage
+  y: number; // percentage
+  text: string;
+}
+
+export type EditPayload =
+  | { type: 'simple'; prompt: string }
+  | { type: 'advanced'; overlayDataUrl: string; comments: Comment[] };

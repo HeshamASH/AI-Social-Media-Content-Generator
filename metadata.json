@@ -1,5 +1,5 @@
 {
-  "name": "AI Social Media Content Generator",
-  "description": "Generate tailored posts for LinkedIn, Twitter/X, and Instagram from a single idea. This app creates platform-specific text and generates unique images with optimal aspect ratios for each network simultaneously.",
+  "name": "AI Interior Design Assistant",
+  "description": "Generate stunning interior design concepts and mood boards from text descriptions. This tool uses AI to create photorealistic room designs, provides detailed design rationales, and features an advanced AI Interior Designer for automated visual refinement. Users can also upload inspiration images to influence the decor style.",
   "requestFramePermissions": []
 }

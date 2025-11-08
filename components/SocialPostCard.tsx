@@ -1,58 +1,46 @@
-
 import React, { useState, useCallback } from 'react';
-import { GeneratedPost, SocialPlatform } from '../types';
-import { LinkedInIcon, TwitterIcon, InstagramIcon } from './IconComponents';
+import { GeneratedDesign, EditPayload } from '../types';
 import { editImage, editText } from '../services/geminiService';
+import AdvancedImageEditor from './AdvancedImageEditor';
 
-interface SocialPostCardProps {
-  post: GeneratedPost;
+interface DesignOutputCardProps {
+  design: GeneratedDesign;
 }
 
-const platformConfig = {
-  [SocialPlatform.LinkedIn]: { Icon: LinkedInIcon, color: 'hover:bg-blue-600', bgColor: 'bg-blue-500' },
-  [SocialPlatform.Twitter]: { Icon: TwitterIcon, color: 'hover:bg-gray-600', bgColor: 'bg-gray-500' },
-  [SocialPlatform.Instagram]: { Icon: InstagramIcon, color: 'hover:bg-pink-600', bgColor: 'bg-pink-500' },
-};
-
-const SocialPostCard: React.FC<SocialPostCardProps> = ({ post }) => {
+const DesignOutputCard: React.FC<DesignOutputCardProps> = ({ design }) => {
   const [copied, setCopied] = useState(false);
   
-  // State for image editing
-  const [isEditingImage, setIsEditingImage] = useState(false);
-  const [editPrompt, setEditPrompt] = useState('');
+  const [currentImage, setCurrentImage] = useState<string | null>(design.image);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isApplyingEdit, setIsApplyingEdit] = useState(false);
-  const [currentImage, setCurrentImage] = useState<string | null>(post.image);
   const [editError, setEditError] = useState<string | null>(null);
 
-  // State for AI text editing
-  const [currentContent, setCurrentContent] = useState<string>(post.content);
+  const [currentRationale, setCurrentRationale] = useState<string>(design.rationale);
   const [isEditingText, setIsEditingText] = useState(false);
   const [textEditPrompt, setTextEditPrompt] = useState('');
   const [isApplyingTextEdit, setIsApplyingTextEdit] = useState(false);
   const [textEditError, setTextEditError] = useState<string | null>(null);
 
-  const { Icon, color, bgColor } = platformConfig[post.platform];
-
   const handleCopy = useCallback(() => {
-    navigator.clipboard.writeText(currentContent).then(() => {
+    navigator.clipboard.writeText(currentRationale).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     });
-  }, [currentContent]);
+  }, [currentRationale]);
   
-  const handleApplyImageEdit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editPrompt.trim() || !currentImage) return;
+  const handleApplyEdit = async (payload: EditPayload) => {
+    if (!currentImage) return;
 
     setIsApplyingEdit(true);
     setEditError(null);
     try {
-        const newImage = await editImage(currentImage, editPrompt);
+        const newImage = await editImage(currentImage, payload);
         setCurrentImage(newImage);
-        setIsEditingImage(false);
-        setEditPrompt('');
+        setIsEditModalOpen(false); // Close modal on success
     } catch(err) {
-        setEditError(err instanceof Error ? err.message : 'Failed to apply image edit.');
+        const message = err instanceof Error ? err.message : 'Failed to apply image edit.';
+        setEditError(message);
+        // Do not close modal on error, so user can see the error message
     } finally {
         setIsApplyingEdit(false);
     }
@@ -65,8 +53,8 @@ const SocialPostCard: React.FC<SocialPostCardProps> = ({ post }) => {
     setIsApplyingTextEdit(true);
     setTextEditError(null);
     try {
-      const newContent = await editText(currentContent, textEditPrompt);
-      setCurrentContent(newContent);
+      const newContent = await editText(currentRationale, textEditPrompt);
+      setCurrentRationale(newContent);
       setIsEditingText(false);
       setTextEditPrompt('');
     } catch (err) {
@@ -80,81 +68,71 @@ const SocialPostCard: React.FC<SocialPostCardProps> = ({ post }) => {
     if (!currentImage) return;
     const link = document.createElement('a');
     link.href = currentImage;
-    const fileName = `ai-social-post-${post.platform.toLowerCase().replace('/x', '')}-${Date.now()}.png`;
+    const fileName = `ai-design-${Date.now()}.png`;
     link.download = fileName;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
-  const getAspectRatioClass = (aspectRatio: string) => {
-    return { '1:1': 'aspect-square', '16:9': 'aspect-video', '3:4': 'aspect-[3/4]' }[aspectRatio] || 'aspect-square';
-  }
+  const renderMarkdown = (text: string) => {
+    if (!text) return { __html: '' };
+    const html = text
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\n/g, '<br />');
+    return { __html: html };
+  };
 
   return (
-    <div className="bg-gray-800 rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:scale-[1.02]">
+    <>
+    <div className="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 border border-gray-200">
       <div className="p-5">
-        <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-                <Icon className="w-8 h-8 text-gray-300" />
-                <h3 className="text-2xl font-bold text-white">{post.platform}</h3>
-            </div>
-            <button
-                onClick={handleCopy}
-                className={`px-4 py-2 text-sm font-semibold rounded-md transition-colors ${ copied ? 'bg-green-500' : `${bgColor} ${color}` }`}
-            >
-                {copied ? 'Copied!' : 'Copy Text'}
-            </button>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+            {/* Image Column */}
             <div className="w-full">
+                <h3 className="text-2xl font-bold text-gray-900 mb-4">Generated Design</h3>
                 {currentImage ? (
-                    <img src={currentImage} alt={`${post.platform} post visual`} className={`w-full h-auto object-cover rounded-lg ${getAspectRatioClass(post.aspectRatio)}`} />
+                    <img src={currentImage} alt="Generated Design" className="w-full h-auto object-contain rounded-lg bg-gray-100 p-2 border border-gray-200" />
                 ) : (
-                    <div className={`w-full bg-gray-700 rounded-lg flex items-center justify-center ${getAspectRatioClass(post.aspectRatio)}`}>
-                        <p className="text-gray-400">Image failed to generate</p>
+                    <div className="w-full bg-gray-200 rounded-lg flex items-center justify-center aspect-video">
+                        <p className="text-gray-500">Image failed to generate</p>
                     </div>
                 )}
                  {currentImage && (
-                    <div className="mt-3">
+                    <div className="mt-4 space-y-3">
                         <div className="flex items-center gap-4">
-                           <button onClick={() => setIsEditingImage(!isEditingImage)} className="text-sm text-purple-400 hover:text-purple-300 font-semibold" disabled={isApplyingEdit}>
-                               {isEditingImage ? 'Cancel' : '✏️ Edit Image'}
+                           <button onClick={() => setIsEditModalOpen(true)} className="text-sm text-blue-600 hover:text-blue-500 font-semibold" disabled={isApplyingEdit}>
+                               ✏️ Edit Image with AI
                            </button>
-                           <button onClick={handleSaveImage} className="text-sm text-teal-400 hover:text-teal-300 font-semibold">
+                           <button onClick={handleSaveImage} className="text-sm text-sky-600 hover:text-sky-500 font-semibold">
                                💾 Save Image
                            </button>
                         </div>
-                        {isEditingImage && (
-                            <form onSubmit={handleApplyImageEdit} className="mt-2 space-y-2">
-                                <input 
-                                    type="text"
-                                    value={editPrompt}
-                                    onChange={(e) => setEditPrompt(e.target.value)}
-                                    placeholder="e.g., add a retro filter"
-                                    className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md focus:ring-1 focus:ring-purple-500"
-                                />
-                                <button type="submit" className="w-full px-3 py-1.5 text-sm bg-purple-600 hover:bg-purple-700 rounded-md disabled:opacity-50" disabled={isApplyingEdit || !editPrompt.trim()}>
-                                    {isApplyingEdit ? 'Applying...' : 'Apply Edit'}
-                                </button>
-                                {editError && <p className="text-xs text-red-400">{editError}</p>}
-                            </form>
-                        )}
                     </div>
                 )}
             </div>
-            <div className="bg-gray-900/50 p-4 rounded-lg h-full flex flex-col justify-between">
-                <p className="flex-grow text-gray-300 whitespace-pre-wrap font-sans leading-relaxed mb-4">
-                    {currentContent}
-                </p>
+            {/* Rationale Column */}
+            <div className="bg-gray-50 p-4 rounded-lg h-full flex flex-col border border-gray-200">
+                <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-2xl font-bold text-gray-900">Design Rationale</h3>
+                    <button
+                        onClick={handleCopy}
+                        className={`px-4 py-2 text-sm font-semibold rounded-md transition-colors text-gray-800 ${ copied ? 'bg-green-500 text-white' : `bg-gray-200 hover:bg-gray-300` }`}
+                    >
+                        {copied ? 'Copied!' : 'Copy Text'}
+                    </button>
+                </div>
+                <div
+                  className="flex-grow text-gray-700 font-sans leading-relaxed mb-4 prose prose-sm"
+                  dangerouslySetInnerHTML={renderMarkdown(currentRationale)}
+                />
                 <div className="mt-auto">
                     <button 
                         onClick={() => setIsEditingText(!isEditingText)} 
-                        className="text-sm text-purple-400 hover:text-purple-300 font-semibold" 
+                        className="text-sm text-blue-600 hover:text-blue-500 font-semibold" 
                         disabled={isApplyingTextEdit}
                     >
-                       {isEditingText ? 'Cancel' : '✏️ Edit Text with AI'}
+                       {isEditingText ? 'Cancel' : '✏️ Edit Rationale with AI'}
                     </button>
                     {isEditingText && (
                         <form onSubmit={handleApplyTextEdit} className="mt-2 space-y-2">
@@ -162,17 +140,17 @@ const SocialPostCard: React.FC<SocialPostCardProps> = ({ post }) => {
                                 type="text"
                                 value={textEditPrompt}
                                 onChange={(e) => setTextEditPrompt(e.target.value)}
-                                placeholder="e.g., make it more witty"
-                                className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md focus:ring-1 focus:ring-purple-500"
+                                placeholder="e.g., make this sound more luxurious"
+                                className="w-full p-2 bg-white border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500"
                             />
                             <button 
                                 type="submit" 
-                                className="w-full px-3 py-1.5 text-sm bg-purple-600 hover:bg-purple-700 rounded-md disabled:opacity-50" 
+                                className="w-full px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-md disabled:opacity-50" 
                                 disabled={isApplyingTextEdit || !textEditPrompt.trim()}
                             >
                                 {isApplyingTextEdit ? 'Applying...' : 'Apply Edit'}
                             </button>
-                            {textEditError && <p className="text-xs text-red-400">{textEditError}</p>}
+                            {textEditError && <p className="text-xs text-red-500">{textEditError}</p>}
                         </form>
                     )}
                 </div>
@@ -180,7 +158,21 @@ const SocialPostCard: React.FC<SocialPostCardProps> = ({ post }) => {
         </div>
       </div>
     </div>
+    {currentImage && (
+      <AdvancedImageEditor
+        isOpen={isEditModalOpen}
+        onClose={() => {
+            setIsEditModalOpen(false);
+            setEditError(null);
+        }}
+        onSubmit={handleApplyEdit}
+        imageUrl={currentImage}
+        isApplyingEdit={isApplyingEdit}
+        error={editError}
+      />
+    )}
+    </>
   );
 };
 
-export default SocialPostCard;
+export default DesignOutputCard;
