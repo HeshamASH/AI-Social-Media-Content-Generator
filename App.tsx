@@ -154,10 +154,10 @@ const App: React.FC = () => {
       <div className="container mx-auto px-4 py-8 md:py-12">
         <header className="text-center mb-12">
             <h1 className="text-4xl md:text-6xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-sky-500 py-6">
-                AI Interior Design Assistant
+                Multivra
             </h1>
             <p className="mt-6 text-lg text-gray-600 max-w-3xl mx-auto">
-                Describe your dream room, and let AI generate a stunning design concept and a detailed rationale for it.
+                Describe your design, and let the AI agents collaborate to design a stunning concept and a detailed rationale for it.
             </p>
         </header>
 

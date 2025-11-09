@@ -1,4 +1,4 @@
-## AI Interior Design Assistant: 3-Minute Showcase Script
+## Multivra: 3-Minute Showcase Script
 
 **Objective:** Demonstrate that this is not just a generic image generator, but an advanced, specialized suite for interior design professionals and enthusiasts, using a multi-agent AI workflow for superior results.
 
@@ -11,7 +11,7 @@
 **(Narration):**
 "Good morning. Generic AI image tools are powerful, but they fall short for professional design. They lack context, control, and the critical eye of a designer. They give you a picture, but not a *plan*.
 
-"This is the AI Interior Design Assistant—a tool built to solve that problem. It's not just an image generator; it's a design co-pilot that understands intent and quality."
+"This is Multivra—a tool built to solve that problem. It's not just an image generator; it's a design co-pilot that understands intent and quality."
 
 ---
 

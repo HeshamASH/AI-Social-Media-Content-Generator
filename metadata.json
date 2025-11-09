@@ -1,5 +1,5 @@
 {
-  "name": "AI Interior Design Assistant",
-  "description": "Generate stunning interior design concepts and mood boards from text descriptions. This tool uses AI to create photorealistic room designs, provides detailed design rationales, and features an advanced AI Interior Designer for automated visual refinement. Users can also upload inspiration images to influence the decor style.",
+  "name": "Multivra",
+  "description": "Describe your design, and let the AI agents collaborate to design a stunning concept and a detailed rationale for it.",
   "requestFramePermissions": []
 }

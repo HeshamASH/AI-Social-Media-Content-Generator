@@ -1,6 +1,6 @@
-# AI Interior Design Assistant
+# Multivra
 
-> An AI-powered suite to generate, edit, and explain beautiful interior design concepts from a simple text description.
+> Describe your design, and let the AI agents collaborate to design a stunning concept and a detailed rationale for it.
 
 ---
 
