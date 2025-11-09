@@ -36,6 +36,12 @@ export interface InspirationTemplate {
   description: string;
   roomType: RoomType;
   decorStyle: DecorStyle;
+  lightingType?: LightingType;
+}
+
+export interface LightingTemplate {
+  name: LightingType;
+  description: string;
 }
 
 export interface Comment {

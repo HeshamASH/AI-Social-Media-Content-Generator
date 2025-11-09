@@ -16,6 +16,44 @@
   }
 }
 </script>
+<style>
+  /* For Webkit-based browsers (Chrome, Safari, Edge) */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: rgba(107, 114, 128, 0.5); /* gray-500 with 50% opacity */
+    border-radius: 10px;
+    border: 1px solid transparent;
+    background-clip: content-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(75, 85, 99, 0.7); /* gray-600 with 70% opacity */
+  }
+
+  /* For Firefox */
+  body {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(107, 114, 128, 0.5) transparent;
+  }
+
+  .zoom-on-hover {
+    transition: transform 0.2s ease-in-out;
+  }
+  .zoom-on-hover:hover {
+      transform: scale(1.05);
+  }
+  .clickable-image {
+      cursor: zoom-in;
+  }
+</style>
 </head>
   <body class="bg-gray-100 text-gray-800">
     <div id="root"></div>

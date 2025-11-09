@@ -1,17 +1,20 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { GeneratedDesign, EditPayload } from '../types';
 import { editImage, editText } from '../services/geminiService';
 import AdvancedImageEditor from './AdvancedImageEditor';
+import { ShareIcon } from './IconComponents';
 
 interface DesignOutputCardProps {
   design: GeneratedDesign;
   inspirationImages?: string[];
-  onSave: () => void;
+  onSave: (editedDesign: GeneratedDesign) => void;
+  onImageClick: (imageUrl: string) => void;
 }
 
-const DesignOutputCard: React.FC<DesignOutputCardProps> = ({ design, inspirationImages, onSave }) => {
+const DesignOutputCard: React.FC<DesignOutputCardProps> = ({ design, inspirationImages, onSave, onImageClick }) => {
   const [copied, setCopied] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
+  const [isShareSupported, setIsShareSupported] = useState(false);
   
   const [currentImage, setCurrentImage] = useState<string | null>(design.image);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -23,6 +26,17 @@ const DesignOutputCard: React.FC<DesignOutputCardProps> = ({ design, inspiration
   const [textEditPrompt, setTextEditPrompt] = useState('');
   const [isApplyingTextEdit, setIsApplyingTextEdit] = useState(false);
   const [textEditError, setTextEditError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setCurrentImage(design.image);
+    setCurrentRationale(design.rationale);
+  }, [design]);
+
+  useEffect(() => {
+    if (navigator.share) {
+      setIsShareSupported(true);
+    }
+  }, []);
 
   const handleCopy = useCallback(() => {
     navigator.clipboard.writeText(currentRationale).then(() => {
@@ -78,9 +92,47 @@ const DesignOutputCard: React.FC<DesignOutputCardProps> = ({ design, inspiration
   };
 
   const handleSaveDesign = () => {
-    onSave();
+    onSave({
+        image: currentImage,
+        rationale: currentRationale,
+    });
     setJustSaved(true);
     setTimeout(() => setJustSaved(false), 2500);
+  };
+  
+  const dataURLtoFile = (dataurl: string, filename: string): File | null => {
+    const arr = dataurl.split(',');
+    if (arr.length < 2) { return null; }
+    const mimeMatch = arr[0].match(/:(.*?);/);
+    if (!mimeMatch) { return null; }
+    const mime = mimeMatch[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while(n--){
+        u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new File([u8arr], filename, {type:mime});
+  }
+
+  const handleShare = async () => {
+    if (!navigator.share || !currentImage) return;
+
+    const imageFile = dataURLtoFile(currentImage, `ai-design-${Date.now()}.png`);
+    if (!imageFile) {
+        console.error("Could not convert data URL to file");
+        return;
+    }
+
+    try {
+      await navigator.share({
+        title: 'My AI Interior Design',
+        text: `Check out this interior design concept I created!\n\nDesign Rationale:\n${currentRationale}`,
+        files: [imageFile],
+      });
+    } catch (error) {
+      console.error('Error sharing design:', error);
+    }
   };
 
   const renderMarkdown = (text: string) => {
@@ -102,14 +154,19 @@ const DesignOutputCard: React.FC<DesignOutputCardProps> = ({ design, inspiration
               <div className="lg:col-span-3">
                   <h3 className="text-xl font-semibold text-gray-800 mb-3">Final Design</h3>
                   {currentImage ? (
-                      <img src={currentImage} alt="Generated Design" className="w-full h-auto object-contain rounded-lg bg-gray-100 p-1 border border-gray-200 shadow-md" />
+                      <img 
+                        src={currentImage} 
+                        alt="Generated Design" 
+                        className="w-full h-auto object-contain rounded-lg bg-gray-100 p-1 border border-gray-200 shadow-md zoom-on-hover clickable-image" 
+                        onClick={() => onImageClick(currentImage)}
+                      />
                   ) : (
                       <div className="w-full bg-gray-200 rounded-lg flex items-center justify-center aspect-video">
                           <p className="text-gray-500">Image failed to generate</p>
                       </div>
                   )}
                    {currentImage && (
-                      <div className="mt-4 flex items-center gap-4">
+                      <div className="mt-4 flex items-center flex-wrap gap-x-4 gap-y-2">
                          <button onClick={() => setIsEditModalOpen(true)} className="text-sm text-blue-600 hover:text-blue-500 font-semibold flex items-center gap-1.5" disabled={isApplyingEdit}>
                              ✏️ Edit Image
                          </button>
@@ -123,6 +180,11 @@ const DesignOutputCard: React.FC<DesignOutputCardProps> = ({ design, inspiration
                          >
                              {justSaved ? '✅ Saved!' : '📂 Save Design'}
                          </button>
+                         {isShareSupported && (
+                           <button onClick={handleShare} className="text-sm text-emerald-600 hover:text-emerald-500 font-semibold flex items-center gap-1.5">
+                              <ShareIcon className="w-4 h-4" /> Share
+                           </button>
+                         )}
                       </div>
                   )}
               </div>
@@ -179,7 +241,13 @@ const DesignOutputCard: React.FC<DesignOutputCardProps> = ({ design, inspiration
                       <div className="p-3 bg-white rounded-lg border border-gray-200">
                         <div className="grid grid-cols-3 gap-2">
                             {inspirationImages.map((src, index) => (
-                                <img key={index} src={src} alt={`Inspiration ${index + 1}`} className="rounded-md w-full aspect-square object-cover" />
+                                <img 
+                                  key={index} 
+                                  src={src} 
+                                  alt={`Inspiration ${index + 1}`} 
+                                  className="rounded-md w-full aspect-square object-cover zoom-on-hover clickable-image" 
+                                  onClick={() => onImageClick(src)}
+                                />
                             ))}
                         </div>
                       </div>

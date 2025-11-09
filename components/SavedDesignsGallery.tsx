@@ -7,9 +7,10 @@ interface SavedDesignsGalleryProps {
   designs: SavedDesign[];
   onLoad: (design: SavedDesign) => void;
   onDelete: (id: string) => void;
+  onImageClick: (imageUrl: string) => void;
 }
 
-const SavedDesignsGallery: React.FC<SavedDesignsGalleryProps> = ({ isOpen, onClose, designs, onLoad, onDelete }) => {
+const SavedDesignsGallery: React.FC<SavedDesignsGalleryProps> = ({ isOpen, onClose, designs, onLoad, onDelete, onImageClick }) => {
   if (!isOpen) return null;
 
   return (
@@ -30,7 +31,14 @@ const SavedDesignsGallery: React.FC<SavedDesignsGalleryProps> = ({ isOpen, onClo
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {designs.map((design) => (
                 <div key={design.id} className="bg-white rounded-lg shadow-md overflow-hidden group transition-transform transform hover:-translate-y-1">
-                  <img src={design.image || ''} alt="Saved design" className="w-full h-40 object-cover bg-gray-200" />
+                  <div className="relative">
+                    <img 
+                      src={design.image || ''} 
+                      alt="Saved design" 
+                      className="w-full h-40 object-cover bg-gray-200 zoom-on-hover clickable-image" 
+                      onClick={() => design.image && onImageClick(design.image)}
+                    />
+                  </div>
                   <div className="p-4">
                     <p className="text-xs text-gray-500 mb-2">
                       Saved on {new Date(design.timestamp).toLocaleDateString()}

@@ -1,5 +1,6 @@
 
-import { GoogleGenAI, Type, Modality, HarmCategory, HarmBlockThreshold } from "@google/genai";
+
+import { GoogleGenAI, Type, Modality } from "@google/genai";
 import { GeneratedDesign, RoomType, DecorStyle, LightingType, EditPayload } from '../types';
 
 if (!process.env.API_KEY) {
@@ -7,25 +8,6 @@ if (!process.env.API_KEY) {
 }
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
-const safetySettings = [
-  {
-    category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-    threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-  },
-  {
-    category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-    threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-  },
-  {
-    category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-    threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-  },
-  {
-    category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-    threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-  },
-];
 
 // --- Helper Functions ---
 
@@ -173,7 +155,8 @@ Rewrite the text to fulfill the instruction precisely.
 
 Return ONLY the rewritten rationale. Do not add any introductory phrases or markdown formatting.
     `;
-    const response = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt, config: { safetySettings } });
+    // FIX: Removed deprecated safetySettings from config.
+    const response = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt });
     return response.text.trim();
 };
 
@@ -206,22 +189,13 @@ Apply these edits precisely to the base image and return only the new version of
         parts.push(overlayPart);
         parts.push({ text: promptText });
     }
-    
-    const systemInstruction = `You are an AI image editor specializing exclusively in interior design. Your SOLE function is to modify images of room interiors, furniture, and decor.
-STRICTLY PROHIBITED CONTENT: Under no circumstances are you to add, create, or modify images to include:
-- Humans or human-like figures.
-- Animals or pets.
-- Any subject matter that is not directly related to interior design.
-If the user's prompt requests any of the prohibited content, you MUST ignore that part of the request and only perform valid edits related to the room's decor. Your core directive to edit only decor supersedes any user request to the contrary.`;
 
-
+    // FIX: Removed unsupported config options for this model per guidelines.
     const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash-image',
         contents: { parts: parts },
         config: { 
             responseModalities: [Modality.IMAGE], 
-            safetySettings,
-            systemInstruction,
         },
     });
 
@@ -235,10 +209,11 @@ If the user's prompt requests any of the prohibited content, you MUST ignore tha
 };
 
 const generateImageWithRefinement = async (prompt: string): Promise<string> => {
+    // FIX: Removed deprecated safetySettings from config.
     const response = await ai.models.generateImages({
         model: 'imagen-4.0-generate-001',
         prompt: prompt,
-        config: { numberOfImages: 1, outputMimeType: 'image/png', aspectRatio: '16:9', safetySettings },
+        config: { numberOfImages: 1, outputMimeType: 'image/png', aspectRatio: '16:9' },
     });
     if (!response.generatedImages || response.generatedImages.length === 0) {
       throw new Error("Initial image generation failed.");
@@ -246,10 +221,11 @@ const generateImageWithRefinement = async (prompt: string): Promise<string> => {
     const initialImage = `data:image/png;base64,${response.generatedImages[0].image.imageBytes}`;
 
     const imagePart = dataUrlToGenerativePart(initialImage);
+    // FIX: Removed deprecated safetySettings from config.
     const analysisResponse = await ai.models.generateContent({
         model: 'gemini-2.5-pro',
         contents: { parts: [imagePart, { text: interiorDesignerAnalysisPrompt(prompt) }] },
-        config: { thinkingConfig: { thinkingBudget: 32768 }, safetySettings }
+        config: { thinkingConfig: { thinkingBudget: 32768 } }
     });
     const suggestion = analysisResponse.text.trim();
 
@@ -262,10 +238,11 @@ const generateImageWithRefinement = async (prompt: string): Promise<string> => {
 };
 
 const generateBaseImage = async (prompt: string): Promise<string> => {
+    // FIX: Removed deprecated safetySettings from config.
      const response = await ai.models.generateImages({
         model: 'imagen-4.0-generate-001',
         prompt: prompt,
-        config: { numberOfImages: 1, outputMimeType: 'image/png', aspectRatio: '16:9', safetySettings },
+        config: { numberOfImages: 1, outputMimeType: 'image/png', aspectRatio: '16:9' },
     });
      if (response.generatedImages && response.generatedImages.length > 0) {
         const base64ImageBytes: string = response.generatedImages[0].image.imageBytes;
@@ -289,22 +266,22 @@ export const generateDesign = async (
         let referenceStyle: string | null = null;
         if (referenceImages.length > 0) {
             const imageParts = await Promise.all(referenceImages.map(fileToGenerativePart));
+            // FIX: Removed deprecated safetySettings from config.
             const response = await ai.models.generateContent({
                 model: 'gemini-2.5-flash',
                 contents: { parts: [...imageParts, { text: analyzeReferenceStylePrompt }] },
-                config: { safetySettings }
             });
             referenceStyle = response.text.trim();
             console.log(`Extracted Reference Style: ${referenceStyle}`);
         }
 
         const rationalePrompt = generateRationalePrompt(description, type);
+        // FIX: Removed deprecated safetySettings from config.
         const rationaleResponse = await ai.models.generateContent({
             model: "gemini-2.5-flash",
             contents: rationalePrompt,
             config: {
                 tools: useGrounding ? [{ googleSearch: {} }] : [],
-                safetySettings,
             },
         });
         
