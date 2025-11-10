@@ -8,7 +8,7 @@
 </div>
 
 > let the AI agents collaborate to design a stunning concept and a detailed rationale for it.
-try it out from here: https://multivra-327180202327.us-west1.run.app/
+https://multivra-327180202327.us-west1.run.app/
 
 ---
 
