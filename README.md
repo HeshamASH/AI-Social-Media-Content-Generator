@@ -7,7 +7,7 @@
   <h3 style="color: #6a6a6a; margin-top: -10px;">> MULTIVRA <</h3>
 </div>
 
-> Describe your design, and let the AI agents collaborate to design a stunning concept and a detailed rationale for it.
+>            Describe your design, and let the AI agents collaborate to design a stunning concept and a detailed rationale for it.
 
 ---
 
