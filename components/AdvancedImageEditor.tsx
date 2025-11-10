@@ -244,6 +244,7 @@ const AdvancedImageEditor: React.FC<AdvancedImageEditorProps> = ({ isOpen, onClo
             context.lineWidth = 3 / transform.scale;
             context.lineCap = 'round';
             context.lineJoin = 'round';
+            context.beginPath(); // Start the path here
             
             setIsDrawing(true);
         } else if (e.button === 1) { // Middle click for panning
@@ -263,7 +264,6 @@ const AdvancedImageEditor: React.FC<AdvancedImageEditorProps> = ({ isOpen, onClo
             const context = canvas.getContext('2d')!;
             const pos = getMousePos(e);
             
-            context.beginPath();
             context.moveTo(lastPosRef.current.x, lastPosRef.current.y);
             context.lineTo(pos.x, pos.y);
             context.stroke();

@@ -51,6 +51,18 @@ const dataUrlToGenerativePart = (dataUrl: string) => {
     };
 };
 
+const filesToDataUrls = (files: File[]): Promise<string[]> => {
+    return Promise.all(
+        files.map(file => new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        }))
+    );
+};
+
+
 // --- Prompt Engineering & Generation Prompts ---
 
 const generateRationalePrompt = (description: string, type: RoomType): string => `
@@ -351,7 +363,9 @@ export const generateDesign = async (
             : (prompt: string) => generateBaseImage(prompt, imageModelName);
         const image = await imageGenerationFunc(imagePrompt);
 
-        return { rationale, image };
+        const inspirationUrls = await filesToDataUrls(referenceImages);
+
+        return { rationale, image, inspirationImages: inspirationUrls };
 
     } catch (error) {
         console.error("Error generating design:", error);

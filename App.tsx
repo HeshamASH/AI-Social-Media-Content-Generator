@@ -59,7 +59,6 @@ const App: React.FC = () => {
   const [selectedTemplate, setSelectedTemplate] = useState<InspirationTemplate | null>(null);
   
   const [generatedDesign, setGeneratedDesign] = useState<GeneratedDesign | null>(null);
-  const [generatedInspirationUrls, setGeneratedInspirationUrls] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [useGrounding, setUseGrounding] = useState<boolean>(false);
@@ -84,19 +83,9 @@ const App: React.FC = () => {
     setIsLoading(true);
     setError(null);
     setGeneratedDesign(null);
-    setGeneratedInspirationUrls([]);
 
     try {
       const design = await generateDesign(description, roomType, decorStyle, lightingType, useGrounding, useAdvancedAnalysis, referenceImages, imageQuality);
-      
-      const urls = await Promise.all(
-        referenceImages.map(file => new Promise<string>(resolve => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.readAsDataURL(file);
-        }))
-      );
-      setGeneratedInspirationUrls(urls);
       setGeneratedDesign(design);
 
     // FIX: Corrected the syntax of the catch block from `catch(err) => {` to `catch(err) {`.
@@ -126,14 +115,17 @@ const App: React.FC = () => {
     const newDesigns = saveDesign({
         rationale: generatedDesign.rationale,
         image: generatedDesign.image,
-        inspirationImages: generatedInspirationUrls,
+        inspirationImages: generatedDesign.inspirationImages,
     });
     setSavedDesigns(newDesigns);
   };
 
   const handleLoadDesign = (design: SavedDesign) => {
-      setGeneratedDesign({ rationale: design.rationale, image: design.image });
-      setGeneratedInspirationUrls(design.inspirationImages);
+      setGeneratedDesign({ 
+        rationale: design.rationale, 
+        image: design.image,
+        inspirationImages: design.inspirationImages 
+      });
       setIsGalleryOpen(false);
       // Use a timeout to ensure the DOM has updated before scrolling
       setTimeout(() => {
@@ -310,7 +302,6 @@ const App: React.FC = () => {
               {generatedDesign && (
                 <DesignOutputCard 
                   design={generatedDesign} 
-                  inspirationImages={generatedInspirationUrls} 
                   onSave={handleSaveDesign}
                   onUpdate={handleDesignUpdate}
                   onImageClick={setLightboxImage}

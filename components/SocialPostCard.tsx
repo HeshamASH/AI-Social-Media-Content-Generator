@@ -6,13 +6,12 @@ import { ShareIcon } from './IconComponents';
 
 interface DesignOutputCardProps {
   design: GeneratedDesign;
-  inspirationImages?: string[];
   onSave: () => void;
   onUpdate: (updatedDesign: GeneratedDesign) => void;
   onImageClick: (imageUrl: string) => void;
 }
 
-const DesignOutputCard: React.FC<DesignOutputCardProps> = ({ design, inspirationImages, onSave, onUpdate, onImageClick }) => {
+const DesignOutputCard: React.FC<DesignOutputCardProps> = ({ design, onSave, onUpdate, onImageClick }) => {
   const [copied, setCopied] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
   const [isShareSupported, setIsShareSupported] = useState(false);
@@ -226,12 +225,12 @@ const DesignOutputCard: React.FC<DesignOutputCardProps> = ({ design, inspiration
                     </div>
                   </div>
                   
-                  {inspirationImages && inspirationImages.length > 0 && (
+                  {design.inspirationImages && design.inspirationImages.length > 0 && (
                     <div>
                       <h3 className="text-xl font-semibold text-gray-800 mb-3">Inspiration Swatches</h3>
                       <div className="p-3 bg-white rounded-lg border border-gray-200">
                         <div className="grid grid-cols-3 gap-2">
-                            {inspirationImages.map((src, index) => (
+                            {design.inspirationImages.map((src, index) => (
                                 <img 
                                   key={index} 
                                   src={src} 

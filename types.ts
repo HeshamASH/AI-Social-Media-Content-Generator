@@ -25,12 +25,12 @@ export type ImageQuality = 'ultra' | 'balanced' | 'fastest';
 export interface GeneratedDesign {
   rationale: string;
   image: string | null;
+  inspirationImages: string[];
 }
 
 export interface SavedDesign extends GeneratedDesign {
   id: string;
   timestamp: number;
-  inspirationImages: string[];
 }
 
 export interface InspirationTemplate {
