@@ -49,8 +49,9 @@ This application transforms your text-based ideas into professional, photorealis
 This application uses a sophisticated multi-agent workflow to transform your description into a polished room design.
 
 <p align="center">
-  <img src="AI-Multi-Agent-Generation-Flow.png" width="600">
+  <img src="AI-Multi-Agent-Generation-Flow.png" style="max-width: 100%; width: 100%;">
 </p>
+
 
 ```
 [User Input: Description, Room, Style, Options, Inspiration Images]
