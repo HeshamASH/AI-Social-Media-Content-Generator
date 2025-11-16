@@ -48,7 +48,46 @@ This application transforms your text-based ideas into professional, photorealis
 
 This application uses a sophisticated multi-agent workflow to transform your description into a polished room design.
 
-![AI Multi-Agent Generation Flow](AI Multi-Agent Generation Flow.png)
+```
+[User Input: Description, Room, Style, Options, Inspiration Images]
+           |
+           v
+[App Orchestrator]
+    |
+    +-----> [IF Inspiration Images exist] -> [Agent 1: Style Analyst (gemini-2.5-flash)]
+    |                                            |
+    |                                            v
+    |                                            Analyzes images -> Outputs [Style Description]
+    |                                                                       |
+    |                                                                       v
+    +--------------------------------> [Agent 2: Design Writer (gemini-2.5-flash)] ---------> [Design Rationale]
+    |                                    (Optionally uses Google Search)      |
+    |                                                                         |
+    |                                                                         v
+    +--------------------------------> [Constructs Final Image Prompt] <-------+
+                                                   |
+                                                   v
+          [Agent 3: Visualizer (Imagen 4.0 Series)] -> Creates [Base Design Image]
+                                                   |
+    +--(If 'AI Review' is OFF)-----------+------------------------------------------> [Final Design]
+    |
+    +--(If 'AI Review' is ON) --> [Agent 4: Interior Designer (gemini-2.5-pro)]
+                                                     |
+                                                     v
+                                                     Analyzes [Base Design] -> Outputs ("PERFECT" or "Edit Prompt")
+                                                     |
+                                                     +-- (If "PERFECT") ---------------------> [Final Design]
+                                                     |
+                                                     +-- (If "Edit Prompt") --> [Agent 5: Image Editor (gemini-2.5-flash-image)] -> [Refined Design] -> [Final Design]
+
+
+[Final Output Displayed to User]
+    |
+    +-----> [User Edits Rationale] -> [Agent 6: Text Editor (gemini-2.5-flash)] -> [Updated Rationale]
+    |
+    +-----> [User Edits Design] ----> [Agent 5: Image Editor (gemini-2.5-flash-image)] -> [Updated Design]
+```
+
 ---
 
 ## 🛠️ Technology Stack
