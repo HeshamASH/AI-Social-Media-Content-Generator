@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
 import { GeneratedDesign, EditPayload } from '../types';
 import { editImage, editText } from '../services/geminiService';
@@ -10,9 +11,10 @@ interface DesignOutputCardProps {
   onUpdate: (updatedDesign: GeneratedDesign) => void;
   onImageClick: (imageUrl: string) => void;
   isSaved: boolean;
+  useExperimental: boolean;
 }
 
-const DesignOutputCard: React.FC<DesignOutputCardProps> = ({ design, onSave, onUpdate, onImageClick, isSaved }) => {
+const DesignOutputCard: React.FC<DesignOutputCardProps> = ({ design, onSave, onUpdate, onImageClick, isSaved, useExperimental }) => {
   const [copied, setCopied] = useState(false);
   const [isShareSupported, setIsShareSupported] = useState(false);
   
@@ -44,7 +46,7 @@ const DesignOutputCard: React.FC<DesignOutputCardProps> = ({ design, onSave, onU
     setIsApplyingEdit(true);
     setEditError(null);
     try {
-        const newImage = await editImage(design.image, payload);
+        const newImage = await editImage(design.image, payload, useExperimental);
         onUpdate({ ...design, image: newImage });
         setIsEditModalOpen(false); // Close modal on success
     } catch(err) {

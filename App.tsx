@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
 import { RoomType, DecorStyle, GeneratedDesign, InspirationTemplate, LightingType, SavedDesign, ImageQuality } from './types';
 import { ROOM_TYPES, DECOR_STYLES, LIGHTING_TEMPLATES, INSPIRATION_TEMPLATES, IMAGE_QUALITY_OPTIONS } from './constants';
@@ -28,7 +29,7 @@ const Lightbox: React.FC<LightboxProps> = ({ imageUrl, onClose }) => {
 
   return (
     <div 
-      className="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in" 
+      className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in" 
       onClick={onClose}
       aria-modal="true"
     >
@@ -65,6 +66,7 @@ const App: React.FC = () => {
   const [validationMessage, setValidationMessage] = useState<string | null>(null);
   const [useGrounding, setUseGrounding] = useState<boolean>(false);
   const [useAdvancedAnalysis, setUseAdvancedAnalysis] = useState<boolean>(false);
+  const [useExperimentalModels, setUseExperimentalModels] = useState<boolean>(false);
   
   const [savedDesigns, setSavedDesigns] = useState<SavedDesign[]>([]);
   const [isGalleryOpen, setIsGalleryOpen] = useState<boolean>(false);
@@ -75,6 +77,13 @@ const App: React.FC = () => {
   useEffect(() => {
     setSavedDesigns(getSavedDesigns());
   }, []);
+
+  // Ensure experimental models are turned off if advanced analysis is disabled
+  useEffect(() => {
+    if (!useAdvancedAnalysis) {
+      setUseExperimentalModels(false);
+    }
+  }, [useAdvancedAnalysis]);
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,17 +101,26 @@ const App: React.FC = () => {
     setGeneratedDesign(null);
 
     try {
-      const design = await generateDesign(description, roomType, decorStyle, lightingType, useGrounding, useAdvancedAnalysis, referenceImages, imageQuality);
+      const design = await generateDesign(
+          description, 
+          roomType, 
+          decorStyle, 
+          lightingType, 
+          useGrounding, 
+          useAdvancedAnalysis, 
+          referenceImages, 
+          imageQuality,
+          useExperimentalModels
+      );
       setGeneratedDesign(design);
       setIsCurrentDesignSaved(false);
 
-    // FIX: Corrected the syntax of the catch block from `catch(err) => {` to `catch(err) {`.
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred.');
     } finally {
       setIsLoading(false);
     }
-  }, [description, roomType, decorStyle, lightingType, useGrounding, useAdvancedAnalysis, referenceImages, imageQuality]);
+  }, [description, roomType, decorStyle, lightingType, useGrounding, useAdvancedAnalysis, referenceImages, imageQuality, useExperimentalModels]);
   
   const handleSelectTemplate = (template: InspirationTemplate) => {
     setSelectedTemplate(template);
@@ -311,6 +329,16 @@ const App: React.FC = () => {
                         </label>
                         <button type="button" role="switch" aria-checked={useAdvancedAnalysis} onClick={() => setUseAdvancedAnalysis(!useAdvancedAnalysis)} className={`${useAdvancedAnalysis ? 'bg-blue-600' : 'bg-gray-300'} relative inline-flex h-6 w-11 items-center rounded-full transition-colors`} id="analysis-toggle"><span className={`${useAdvancedAnalysis ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}/></button>
                     </div>
+                    
+                    {useAdvancedAnalysis && (
+                        <div className="flex items-center justify-between pl-4 border-l-2 border-purple-200 ml-1 mt-1 animate-fade-in-fast">
+                            <label htmlFor="experimental-toggle" className="flex flex-col cursor-pointer">
+                                <span className="font-medium text-purple-800">Use New Preview Models (Gemini 3.0)</span>
+                                <span className="text-sm text-purple-600">Design Reviewer: Gemini 3 Pro | Editor: Nano Banana 3 Pro</span>
+                            </label>
+                            <button type="button" role="switch" aria-checked={useExperimentalModels} onClick={() => setUseExperimentalModels(!useExperimentalModels)} className={`${useExperimentalModels ? 'bg-purple-600' : 'bg-gray-300'} relative inline-flex h-6 w-11 items-center rounded-full transition-colors`} id="experimental-toggle"><span className={`${useExperimentalModels ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}/></button>
+                        </div>
+                    )}
                 </div>
 
                 <button
@@ -349,6 +377,7 @@ const App: React.FC = () => {
                   onUpdate={handleDesignUpdate}
                   onImageClick={setLightboxImage}
                   isSaved={isCurrentDesignSaved}
+                  useExperimental={useExperimentalModels}
                 />
               )}
             </div>

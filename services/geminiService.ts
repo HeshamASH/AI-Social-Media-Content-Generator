@@ -212,15 +212,15 @@ Rewrite the text to fulfill the instruction precisely.
 
 Return ONLY the rewritten rationale. Do not add any introductory phrases or markdown formatting.
     `;
-    // FIX: Removed deprecated safetySettings from config.
     const response = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt });
     return response.text.trim();
 };
 
-export const editImage = async (imageDataUrl: string, payload: EditPayload): Promise<string> => {
+export const editImage = async (imageDataUrl: string, payload: EditPayload, useExperimental: boolean = false): Promise<string> => {
     const baseImagePart = dataUrlToGenerativePart(imageDataUrl);
+    // Use gemini-3-pro-image-preview if experimental is ON, otherwise default to gemini-2.5-flash-image (nano banana)
+    const modelName = useExperimental ? 'gemini-3-pro-image-preview' : 'gemini-2.5-flash-image';
     
-    // FIX: Explicitly type `parts` as `any[]` to allow both image and text parts.
     const parts: any[] = [baseImagePart];
     let promptText = '';
 
@@ -276,9 +276,8 @@ ${editContentPolicy}
         parts.push({ text: promptText });
     }
 
-    // FIX: Removed unsupported config options for this model per guidelines.
     const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image',
+        model: modelName,
         contents: { parts: parts },
         config: { 
             responseModalities: [Modality.IMAGE], 
@@ -294,8 +293,7 @@ ${editContentPolicy}
     throw new Error("Failed to edit design image.");
 };
 
-const generateImageWithRefinement = async (prompt: string, modelName: string): Promise<string> => {
-    // FIX: Removed deprecated safetySettings from config.
+const generateImageWithRefinement = async (prompt: string, modelName: string, useExperimental: boolean): Promise<string> => {
     const response = await ai.models.generateImages({
         model: modelName,
         prompt: prompt,
@@ -307,11 +305,13 @@ const generateImageWithRefinement = async (prompt: string, modelName: string): P
     const initialImage = `data:image/png;base64,${response.generatedImages[0].image.imageBytes}`;
 
     const imagePart = dataUrlToGenerativePart(initialImage);
-    // FIX: Removed deprecated safetySettings from config.
+    // Use gemini-3-pro-preview if experimental is ON, otherwise default to gemini-2.5-flash
+    const reviewerModel = useExperimental ? 'gemini-3-pro-preview' : 'gemini-2.5-flash';
+    
     const analysisResponse = await ai.models.generateContent({
-        model: 'gemini-2.5-pro',
+        model: reviewerModel,
         contents: { parts: [imagePart, { text: interiorDesignerAnalysisPrompt(prompt) }] },
-        config: { thinkingConfig: { thinkingBudget: 32768 } }
+        config: { thinkingConfig: { thinkingBudget: useExperimental ? 32768 : 0 } }
     });
     const suggestion = analysisResponse.text.trim();
 
@@ -320,11 +320,10 @@ const generateImageWithRefinement = async (prompt: string, modelName: string): P
     }
     
     console.log(`Applying AI Interior Designer edit: "${suggestion}"`);
-    return await editImage(initialImage, { type: 'simple', prompt: suggestion });
+    return await editImage(initialImage, { type: 'simple', prompt: suggestion }, useExperimental);
 };
 
 const generateBaseImage = async (prompt: string, modelName: string): Promise<string> => {
-    // FIX: Removed deprecated safetySettings from config.
      const response = await ai.models.generateImages({
         model: modelName,
         prompt: prompt,
@@ -347,13 +346,13 @@ export const generateDesign = async (
     useGrounding: boolean,
     useAdvancedRefinement: boolean,
     referenceImages: File[],
-    imageQuality: ImageQuality
+    imageQuality: ImageQuality,
+    useExperimental: boolean = false
 ): Promise<GeneratedDesign> => {
     try {
         let referenceStyle: string | null = null;
         if (referenceImages.length > 0) {
             const imageParts = await Promise.all(referenceImages.map(fileToGenerativePart));
-            // FIX: Removed deprecated safetySettings from config.
             const response = await ai.models.generateContent({
                 model: 'gemini-2.5-flash',
                 contents: { parts: [...imageParts, { text: analyzeReferenceStylePrompt }] },
@@ -363,7 +362,6 @@ export const generateDesign = async (
         }
 
         const rationalePrompt = generateRationalePrompt(description, type);
-        // FIX: Removed deprecated safetySettings from config.
         const rationaleResponse = await ai.models.generateContent({
             model: "gemini-2.5-flash",
             contents: rationalePrompt,
@@ -377,7 +375,7 @@ export const generateDesign = async (
         const imageModelName = imageModelMap[imageQuality];
         const imagePrompt = generateDecorImagePrompt(description, type, style, lighting, referenceStyle);
         const imageGenerationFunc = useAdvancedRefinement 
-            ? (prompt: string) => generateImageWithRefinement(prompt, imageModelName)
+            ? (prompt: string) => generateImageWithRefinement(prompt, imageModelName, useExperimental)
             : (prompt: string) => generateBaseImage(prompt, imageModelName);
         const image = await imageGenerationFunc(imagePrompt);
 
