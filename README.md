@@ -1,4 +1,4 @@
-<div align="center">
+[<div align="center">
   <pre style="font-size: 10px; font-weight: bold; color: #00ff00; line-height: 1.2;">
  █▀▄▀█ █   █ █  ▀▀█▀▀ █ █   █ █▀▀█  █▀▀█ 
 █ ▀ █ █   █ █    █   █ █ ▄ █ █▀█▀  █▀▀█
@@ -187,4 +187,4 @@ ${originalPrompt}
     *   **Your Output:** PERFECT
 
 Now, analyze the provided room image based on the original prompt and provide your output.
-```
+```](https://chatgpt.com/share/691f4c57-fa04-8006-9e4e-4f99c8d45f24)
