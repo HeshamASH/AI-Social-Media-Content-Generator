@@ -1,4 +1,4 @@
-[<div align="center">
+<div align="center">
   <pre style="font-size: 10px; font-weight: bold; color: #00ff00; line-height: 1.2;">
  █▀▄▀█ █   █ █  ▀▀█▀▀ █ █   █ █▀▀█  █▀▀█ 
 █ ▀ █ █   █ █    █   █ █ ▄ █ █▀█▀  █▀▀█
